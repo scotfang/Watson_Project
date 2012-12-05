@@ -5,11 +5,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.LinkedHashMap;
+import java.util.Set;
 import java.util.Vector;
 
 public class DataLoader 
@@ -26,6 +29,11 @@ public class DataLoader
 	public static final String wekaTrainingFilePath	= "C:\\Users\\Alex\\Documents\\School\\CSM276A\\IBM_Watson_project\\wekaLabelled.csv";
 	public static final String numCandidatesPath	= "C:\\Users\\Alex\\Dropbox\\Docs\\CSM276A\\numCandidates.txt";
 	public static final String clusterSubsetPath	= "C:\\Users\\Alex\\Documents\\School\\CSM276A\\IBM_Watson_project\\clusterSubset.csv";//"C:\\Users\\Alex\\Documents\\school\\CSM276A\\clusterSubset.csv";
+	
+	//NOTE these are attribute numbers, not indices (i.e. index+1)
+	public static final String cluster1Subset		= "13,17,47,50,54,61,62,67,90,94,98,99,238,242,248,249,268,271,273,274,276,280,293,295,300,304,312,316,333,335,16,18,65,72,88,288,294,317,21,91,8,64,109,114,244,281,239,247,287,291";
+	public static final String cluster2Subset		= "22,23,67,74,271,274,276,286,288,293,294,300,306,316,45,287,319,342,64,253,328,21,42,50,61,93,291";
+	public static final String cluster3Subset		= "8,13,16,17,47,50,54,68,88,100,109,271,274,280,287,293,294,300,316,317,340,67,74,238,333,341,56,62,242,247,260,273,288,306,6,18,45,98,107,250,276,290";
 	
 	public static Map<Long, Integer> loadData() throws IOException
 	{
@@ -141,76 +149,29 @@ public class DataLoader
 		out8.close();
 	}
 	
-	public static void splitClusterFile(int cluster) throws IOException
+	public static void splitClusterFile(int cluster, int n) throws IOException
 	{
-		BufferedReader	in 		= new BufferedReader(new FileReader("7clusters\\cluster" + cluster + ".csv"));
-		PrintWriter		out1	= new PrintWriter("7clusters\\cluster" + cluster + "_" + 1 +".csv");
-		PrintWriter		out2	= new PrintWriter("7clusters\\cluster" + cluster + "_" + 2 +".csv");
-		PrintWriter		out3	= new PrintWriter("7clusters\\cluster" + cluster + "_" + 3 +".csv");
-		PrintWriter		out4	= new PrintWriter("7clusters\\cluster" + cluster + "_" + 4 +".csv");
-		PrintWriter		out5	= new PrintWriter("7clusters\\cluster" + cluster + "_" + 5 +".csv");
-		PrintWriter		out6	= new PrintWriter("7clusters\\cluster" + cluster + "_" + 6 +".csv");
-		PrintWriter		out7	= new PrintWriter("7clusters\\cluster" + cluster + "_" + 7 +".csv");
-		PrintWriter		out8	= new PrintWriter("7clusters\\cluster" + cluster + "_" + 8 +".csv");
+		BufferedReader			in 		= new BufferedReader(new FileReader("6clusters\\cluster" + cluster + ".csv"));
+		ArrayList<PrintWriter>	files	= new ArrayList<PrintWriter>();
+		for(int i = 0; i < n; i++)
+			files.add(new PrintWriter("6clusters\\cluster" + cluster + "_" + i + ".csv"));
 		
 		String firstLine = in.readLine();
 		
-		out1.println(firstLine);
-		out2.println(firstLine);
-		out3.println(firstLine);
-		out4.println(firstLine);
-		out5.println(firstLine);
-		out6.println(firstLine);
-		out7.println(firstLine);
-		out8.println(firstLine);
+		for(PrintWriter pw : files)
+			pw.println(firstLine);
 				
 		int i = 1;
 		String curLine;
 		while((curLine = in.readLine()) != null)
 		{
-			switch(i%8)
-			{
-			case 0:
-				out1.println(curLine);
-				break;
-			case 1:
-				out2.println(curLine);
-				break;
-			case 2:
-				out3.println(curLine);
-				break;
-			case 3:
-				out4.println(curLine);
-				break;
-			case 4:
-				out5.println(curLine);
-				break;
-			case 5:
-				out6.println(curLine);
-				break;
-			case 6:
-				out7.println(curLine);
-				break;
-			case 7:
-				out8.println(curLine);
-				break;
-			default:
-//				out1.println(curLine);
-				System.out.println("PROBLEM DEFAULT SWITCH REACHED");
-				break;
-			}
-			
+			PrintWriter pw = files.get(i%n);
+			pw.println(curLine);			
 			i++;
 		}
 		in.close();
-		out1.close();
-		out2.close();
-		out3.close();
-		out4.close();
-		out5.close();
-		out6.close();
-		out7.close();
-		out8.close();
+		for(PrintWriter pw : files)
+			pw.close();
 	}
 	
 	public static Map<Long, Vector<String>> getQuestionLines() throws IOException
@@ -317,8 +278,8 @@ public class DataLoader
 	
 	public static void createWekaDataFile() throws IOException
 	{
-		BufferedReader in = new BufferedReader(new FileReader(trainingFilePath));
-		PrintWriter	out = new PrintWriter("C:\\Users\\Alex\\Documents\\School\\CSM276A\\IBM_Watson_project\\wekaTestingSet.csv");
+		BufferedReader in = new BufferedReader(new FileReader("unlabelled\\unlabelled.csv"));
+		PrintWriter	out = new PrintWriter("C:\\Users\\Alex\\Documents\\School\\CSM276A\\IBM_Watson_project\\unlabelled\\wekaUnlabelled.csv");
 		
 		String curLine = in.readLine();
 		String[] attributes = curLine.split(",");
@@ -336,18 +297,18 @@ public class DataLoader
 		out.close();
 	}
 	
-	public static void printFeatureSubset(String subsetIndCSV) throws IOException
+	public static void printTrainingFeatureSubset(String src, String dest, String subsetIndCSV) throws IOException
 	{
 		String[] indices = subsetIndCSV.split(",");
 		
-		BufferedReader in = new BufferedReader(new FileReader(trainingFilePath));
-		PrintWriter out = new PrintWriter(clusterSubsetPath);
+		BufferedReader in = new BufferedReader(new FileReader(src));
+		PrintWriter out = new PrintWriter(dest);
 		
-		String firstLine = "qId";
-		for(int i = 0; i < indices.length; i++)
-			firstLine += ",attr" + indices[i].trim();
+//		String firstLine = "qId";
+//		for(int i = 0; i < indices.length; i++)
+//			firstLine += ",attr" + indices[i].trim();
 //		firstLine += ",label";
-		out.println(firstLine);
+//		out.println(firstLine);
 
 		String curLine;
 		while((curLine = in.readLine()) != null)
@@ -357,12 +318,81 @@ public class DataLoader
 			for(int i = 0; i < indices.length; i++)
 			{
 				Integer ind = new Integer(indices[i].trim());
-				line2write += "," + lineArr[ind.intValue()].trim();
+				line2write += "," + lineArr[ind.intValue()-1].trim();
 			}
 			out.println(line2write);
 		}
 		
 		in.close();
+		out.close();
+	}
+	
+	public static void generateClusterSubset(int cluster) throws IOException
+	{
+		BufferedReader	in	= new BufferedReader(new FileReader("6clusters\\cluster" + cluster + "_attr.txt"));
+		PrintWriter		out	= new PrintWriter("6clusters\\cluster" + cluster + "_attr_subset.csv");
+		
+		//create set of attribute numbers
+		LinkedHashSet<Integer> attributeSet = new LinkedHashSet<Integer>();		
+		String curLine;
+		while((curLine = in.readLine()) != null)
+		{
+			String[] curAttrs = curLine.trim().split(",");
+			for(String s : curAttrs)
+				attributeSet.add(new Integer(s.trim()));
+		}
+		Object[] attributes = attributeSet.toArray();
+		for(int i = 0; i < attributes.length; i++)
+			System.out.print((Integer)attributes[i] + ",");
+				
+		//first line for weka
+//		String firstLine = "qId";
+//		for(int i = 0; i < attributes.length; i++)
+//			firstLine += ",attr" + attributes[i];
+//		firstLine += ",label";
+//		out.println(firstLine);
+		
+		//begin parsing lines
+		in.close();
+		in = new BufferedReader(new FileReader("6clusters\\cluster" + cluster + ".csv"));
+		while((curLine = in.readLine()) != null)
+		{
+			String[] lineArr = curLine.trim().split(",");
+			String line2write = lineArr[0];
+			for(int i = 0; i < attributes.length; i++)
+			{
+				Integer ind = ((Integer)attributes[i]) - 1;
+				line2write += "," + lineArr[ind].trim();
+			}
+			line2write += "," + lineArr[lineArr.length-1];
+			out.println(line2write);
+		}
+		
+		in.close();
+		out.close();
+	}
+	
+	public static void splitUnlabelled() throws Exception
+	{
+		int numLines = 0;
+		BufferedReader in = new BufferedReader(new FileReader("unlabelled\\unlabelled.csv"));
+		while(in.readLine() != null)
+			numLines++;
+		in.close();
+		System.out.println("Num Lines=" + numLines);
+				
+		in = new BufferedReader(new FileReader("unlabelled\\unlabelled.csv"));
+		PrintWriter out = new PrintWriter("unlabelled\\unlabelled_1.csv");
+		for(int i = 0; i < numLines/2; i++)
+		{
+			out.println(in.readLine());
+		}
+		out.close();
+		
+		out = new PrintWriter("unlabelled\\unlabelled_2.csv");
+		String curLine;
+		while((curLine = in.readLine()) != null)
+			out.println(curLine);
 		out.close();
 	}
 }
